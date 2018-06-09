@@ -1,25 +1,29 @@
 package com.example.guoxiaofei.opengltest
 
+import android.app.ActivityManager
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.support.v7.app.AppCompatActivity
+import android.opengl.GLUtils
+import android.opengl.Matrix
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.nio.ShortBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
-import android.opengl.GLES20
-import android.opengl.Matrix
-import java.nio.ShortBuffer
-import android.opengl.GLUtils
-import android.graphics.BitmapFactory
-import android.graphics.Bitmap
-import android.content.Context.ACTIVITY_SERVICE
-import android.app.ActivityManager
-import android.content.Context
-import android.util.Log
 
+
+/**
+ * FIT_XY：宽高都填充满，如果宽高比不一致，则会发生变形；
+ * CENTER_CROP：短边填充满，长边等比例缩放，超出部分两端裁掉；
+ * CENTER_INSIDE：长边填充满，短边等比例缩放，不足部分两端留黑边；
+ */
 
 class MainActivity : AppCompatActivity(), GLSurfaceView.Renderer {
 
@@ -38,8 +42,8 @@ class MainActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                     + "}")
     private val FRAGMENT_SHADER = (
             "precision mediump float;\n"
-                    +"varying vec2 v_texCoord;\n"
-                    +"uniform sampler2D s_texture;\n"
+                    + "varying vec2 v_texCoord;\n"
+                    + "uniform sampler2D s_texture;\n"
                     + "void main() {\n"
                     + " gl_FragColor = texture2D(s_texture, v_texCoord);\n"
                     + "}")
@@ -116,6 +120,11 @@ class MainActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     override fun onPause() {
         super.onPause()
         glSurfaceView.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        GLES20.glDeleteTextures(1, IntArray(1) { mTexName!! }, 0)
     }
 
 
