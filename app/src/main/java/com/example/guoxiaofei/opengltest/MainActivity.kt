@@ -11,8 +11,7 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import android.opengl.GLES20
 import android.opengl.Matrix
-
-
+import java.nio.ShortBuffer
 
 
 class MainActivity : AppCompatActivity(), GLSurfaceView.Renderer {
@@ -30,18 +29,29 @@ class MainActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                     + " gl_FragColor = vec4(0.5, 0, 0, 1);\n"
                     + "}")
     private val VERTEX = floatArrayOf(// in counterclockwise order:
-            0f, 1f, 0f, // top
-            -0.5f, -1f, 0f, // bottom left
-            1f, -1f, 0f)// bottom right
-
+            1f, 1f, 0f,   // top right
+            -1f, 1f, 0f,  // top left
+            -1f, -1f, 0f, // bottom left
+            1f, -1f, 0f // bottom right
+    )
     private val floatBuffer: FloatBuffer by lazy {
-        ByteBuffer.allocateDirect(VERTEX.size * 4)
+        ByteBuffer.allocateDirect(VERTEX.size * 6)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer()
                 .put(VERTEX)
     }
 
-    private var mMVPMatrixHandle : Int? = null
+    private val VERTEX_INDEX = shortArrayOf(0, 1, 2, 0, 2, 3)
+
+    private val vertexIndexBuffer: ShortBuffer by lazy {
+        ByteBuffer.allocateDirect(VERTEX_INDEX.size * 2)
+                .order(ByteOrder.nativeOrder())
+                .asShortBuffer()
+                .put(VERTEX_INDEX)
+    }
+
+
+    private var mMVPMatrixHandle: Int? = null
 
     private var mMVPMatrix: FloatArray = FloatArray(32)
 
@@ -54,6 +64,7 @@ class MainActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         glSurfaceView.setRenderer(this)
         glSurfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
         floatBuffer.position(0)
+        vertexIndexBuffer.position(0)
         //mMVPMatrix.fill(1f, 0 , 32)
     }
 
@@ -71,13 +82,14 @@ class MainActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle!!, 1, false, mMVPMatrix, 0)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3)
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, VERTEX_INDEX.size,
+                GLES20.GL_UNSIGNED_SHORT, vertexIndexBuffer)
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
         Matrix.perspectiveM(mMVPMatrix, 0, 45f, width.toFloat() / height, 0.1f, 100f)
-        Matrix.translateM(mMVPMatrix, 0, 0f, 0f, -2.5f)
+        Matrix.translateM(mMVPMatrix, 0, 0f, 0f, -5f)
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
